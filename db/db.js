@@ -45,7 +45,24 @@ const getUserToken = user => {
     });
 };
 
-const saveNotification = (user, notification) => {
+// Check if notification exists to avoid double notifications caused
+// e.g. by mention and reply in the same post or by editing a reply/mention
+const isExistingNotification = (user, type, author, permlink) => {
+  const args = { user, author };
+  if (type !== 'reply' && type !== 'mention') args.type = type;
+  if (permlink) args.permlink = permlink;
+  return Notifications.findOne(args)
+    .then(res => {
+      if (res) return true;
+      return false;
+    })
+    .catch(err => {
+      console.log(err);
+      return false;
+    });
+};
+
+const saveNotification = (user, type, author, permlink) => {
   return Notifications.find({ user })
     .countDocuments()
     .then(res => {
@@ -53,18 +70,32 @@ const saveNotification = (user, notification) => {
       if (res > 20)
         return Notifications.findOneAndUpdate(
           { user },
-          { notification, date: new Date() },
+          { type, author, permlink, date: new Date() },
           { sort: { date: 1 } },
         )
-          .then(res => console.log(res))
-          .catch(err => console.error(err));
+          .then(res => {
+            console.log(res);
+            return;
+          })
+          .catch(err => {
+            console.error(err);
+            return;
+          });
       return Notifications.create({
         user,
-        notification,
+        type,
+        author,
+        permlink,
         date: new Date(),
       })
-        .then(res => console.log(res))
-        .catch(err => console.error(err));
+        .then(res => {
+          console.log(res);
+          return;
+        })
+        .catch(err => {
+          console.error(err);
+          return;
+        });
     })
     .catch(err => {
       console.log(err);
@@ -74,5 +105,6 @@ const saveNotification = (user, notification) => {
 module.exports = {
   getTrackedUsers,
   getUserToken,
+  isExistingNotification,
   saveNotification,
 };

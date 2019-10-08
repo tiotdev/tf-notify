@@ -1,6 +1,14 @@
 const Redis = require('ioredis');
-const { getTrackedUsers, getUserToken, saveNotification } = require('./db/db');
+const {
+  getTrackedUsers,
+  getUserToken,
+  saveNotification,
+  isExistingNotification,
+} = require('./db/db');
 const { sendWebPush } = require('./helpers/sendWebPush');
+const {
+  messageFromNotification,
+} = require('./helpers/messageFromNotification');
 
 // Redis requires separate instances for subscribing and retrieving messages
 const stm = new Redis(
@@ -11,8 +19,6 @@ const client = new Redis(
   6379,
   process.env.MEESEEKER_PORT_6379_TCP_ADDR || 'localhost',
 );
-
-console.log(process.env);
 
 let trackFollows = [];
 let trackMentions = [];
@@ -33,33 +39,26 @@ updateTrackedUsers();
 // Obtain current list of tracked users/actions from db every minute
 setInterval(updateTrackedUsers, 60000);
 
-const sendNotification = (user, title, message, button, action) => {
-  saveNotification(user, `${title}: ${message}`);
-  getUserToken(user).then(token => {
-    const payload = {
-      body: message,
-      title,
-      icon: 'https://travelfeed.io/android-chrome-192x192.png',
-    };
-
-    sendWebPush(token, payload);
-    console.log(
-      `Sending notification to ${user} with token ${token}: ${message}.${
-        button ? ` Click ${button} to ${action}` : ''
-      }`,
-    );
+const sendNotification = (user, type, author, permlink) => {
+  isExistingNotification(user, type, author, permlink).then(res => {
+    if (res === true) return;
+    return saveNotification(user, type, author, permlink).then(() => {
+      return getUserToken(user).then(token => {
+        const payload = messageFromNotification(type, author, permlink);
+        sendWebPush(token, payload);
+        console.log(
+          `Sending notification to ${user}' with payload ${JSON.stringify(
+            payload,
+          )}`,
+        );
+      });
+    });
   });
 };
 
 const parseReply = (parent_author, author, permlink) => {
   if (trackReplies.indexOf(parent_author) !== -1) {
-    sendNotification(
-      parent_author,
-      'New Reply',
-      `${author} has replied to you`,
-      'View reply',
-      `@${author}/${permlink}`,
-    );
+    sendNotification(parent_author, 'reply', author, permlink);
   }
 };
 
@@ -67,13 +66,7 @@ const parseMentions = (users, author, permlink) => {
   if (!users || users.length < 1) return;
   users.forEach(u => {
     if (trackMentions.indexOf(u) !== -1) {
-      sendNotification(
-        u,
-        'You have been mentioned',
-        `by ${author}`,
-        'View post',
-        `@${author}/${permlink}`,
-      );
+      sendNotification(u, 'mention', author, permlink);
     }
   });
 };
@@ -82,7 +75,7 @@ const parseFollow = (json, follower) => {
   if (json[0] !== 'follow' || json[1].what[0] !== 'blog') return;
   const following = json[1].following;
   if (trackFollows.indexOf(following) !== -1) {
-    sendNotification(following, 'New Follower', `${follower} now follows you`);
+    sendNotification(following, 'follow', follower);
   }
 };
 
@@ -90,10 +83,9 @@ const parseCuration = (author, permlink, weight) => {
   if (trackCuration.indexOf(author) !== -1) {
     sendNotification(
       author,
-      'Congratulations!',
-      `Your post ${permlink} has been ${
-        weight < 6600 ? 'honoured' : 'curated'
-      } by the TravelFeed curation team!`,
+      weight < 6600 ? 'honour' : 'curation',
+      author,
+      permlink,
     );
   }
 };
@@ -117,7 +109,7 @@ const processEvent = event => {
         if (res.value.id === 'follow')
           parseFollow(
             JSON.parse(res.value.json),
-            res.value.required_posting_auths,
+            res.value.required_posting_auths[0],
           );
       } else if (res.type === 'vote_operation') {
         if (res.value.voter !== 'travelfeed' || res.value.weight < 5000) return;

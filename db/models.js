@@ -23,7 +23,9 @@ const pushSubscriptionsSchema = new Schema({
 
 const notificationsSchema = new Schema({
   user: { type: String },
-  notification: { type: String },
+  type: { type: String },
+  author: { type: String },
+  permlink: { type: String },
   date: { type: Date, default: Date.now() },
 });
 

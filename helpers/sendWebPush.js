@@ -10,8 +10,8 @@ webpush.setVapidDetails(FCM_EMAIL, WEB_PUSH_PUB, WEB_PUSH_PRIV);
 const sendWebPush = (token, payload) => {
   webpush
     .sendNotification(JSON.parse(token), JSON.stringify(payload))
-    .then(res => {
-      console.log(res);
+    .then(() => {
+      console.log('Web push sent');
     })
     .catch(err => {
       console.log(err);

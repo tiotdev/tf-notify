@@ -21,7 +21,7 @@ npm run dev
 1. Run meeseeker as docker container
 
 ```
-docker run -d --name meeseeker --env MEESEEKER_PUBLISH_OP_CUSTOM_ID=true --env MEESEEKER_INCLUDE_VIRTUAL=false inertia/meeseeker:latest --restart unless-stopped
+docker run -d --name meeseeker --env MEESEEKER_PUBLISH_OP_CUSTOM_ID=true --env MEESEEKER_INCLUDE_VIRTUAL=false --env MEESEEKER_EXPIRE_KEYS=300 inertia/meeseeker:latest --restart unless-stopped
 ```
 
 2. Pull tfnotify from Docker hub & run
