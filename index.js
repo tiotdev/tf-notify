@@ -3,13 +3,21 @@ const { getTrackedUsers, getUserToken, saveNotification } = require('./db/db');
 const { sendWebPush } = require('./helpers/sendWebPush');
 
 // Redis requires separate instances for subscribing and retrieving messages
-const stm = new Redis(6380);
-const client = new Redis(6380);
+const stm = new Redis(
+  6379,
+  process.env.MEESEEKER_PORT_6379_TCP_ADDR || 'localhost',
+);
+const client = new Redis(
+  6379,
+  process.env.MEESEEKER_PORT_6379_TCP_ADDR || 'localhost',
+);
 
-let trackFollows;
-let trackMentions;
-let trackReplies;
-let trackCuration;
+console.log(process.env);
+
+let trackFollows = [];
+let trackMentions = [];
+let trackReplies = [];
+let trackCuration = [];
 
 const updateTrackedUsers = () => {
   getTrackedUsers().then(res => {
