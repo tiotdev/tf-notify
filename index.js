@@ -1,23 +1,38 @@
 const Redis = require('ioredis');
+const { getTrackedUsers, getUserToken } = require('./db/db');
 
 // Redis requires separate instances for subscribing and retrieving messages
 const stm = new Redis(6380);
 const client = new Redis(6380);
 
-// Placeholders
-// TODO: Obtain current list from db every X minutes/block
-const trackFollows = ['jpphoto'];
-const trackMentions = ['jpphoto'];
-const trackReplies = ['jpphoto'];
-const trackCuration = ['jpphoto'];
+let trackFollows;
+let trackMentions;
+let trackReplies;
+let trackCuration;
+
+const updateTrackedUsers = () => {
+  getTrackedUsers().then(res => {
+    trackFollows = res.trackFollows;
+    trackMentions = res.trackMentions;
+    trackReplies = res.trackReplies;
+    trackCuration = res.trackCuration;
+  });
+};
+
+// Get initial list of tracked users/actions
+updateTrackedUsers();
+// Obtain current list of tracked users/actions from db every minute
+setInterval(updateTrackedUsers, 60000);
 
 const sendNotification = (user, message, button, action) => {
   // TODO: Get user token from db, send push notification with web-push
-  console.log(
-    `Sending notification to ${user}: ${message}.${
-      button ? ` Click ${button} to ${action}` : ''
-    }`,
-  );
+  getUserToken(user).then(token => {
+    console.log(
+      `Sending notification to ${user} with token ${token}: ${message}.${
+        button ? ` Click ${button} to ${action}` : ''
+      }`,
+    );
+  });
 };
 
 const parseReply = (parent_author, author, permlink) => {

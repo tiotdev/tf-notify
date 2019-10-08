@@ -10,9 +10,11 @@
   "author": "Julian Peters",
   "license": "MIT",
   "dependencies": {
-    "ioredis": "^4.14.1"
+    "ioredis": "^4.14.1",
+    "mongoose": "^5.7.3"
   },
   "devDependencies": {
+    "dotenv": "^8.1.0",
     "eslint": "^6.5.1",
     "eslint-config-prettier": "^6.3.0",
     "eslint-plugin-prettier": "^3.1.1",
