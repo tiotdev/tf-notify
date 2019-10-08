@@ -1,5 +1,6 @@
 const Redis = require('ioredis');
 const { getTrackedUsers, getUserToken } = require('./db/db');
+const { sendWebPush } = require('./helpers/sendWebPush');
 
 // Redis requires separate instances for subscribing and retrieving messages
 const stm = new Redis(6380);
@@ -24,9 +25,15 @@ updateTrackedUsers();
 // Obtain current list of tracked users/actions from db every minute
 setInterval(updateTrackedUsers, 60000);
 
-const sendNotification = (user, message, button, action) => {
-  // TODO: Get user token from db, send push notification with web-push
+const sendNotification = (user, title, message, button, action) => {
   getUserToken(user).then(token => {
+    const payload = {
+      body: message,
+      title,
+      icon: 'https://travelfeed.io/android-chrome-192x192.png',
+    };
+
+    sendWebPush(token, payload);
     console.log(
       `Sending notification to ${user} with token ${token}: ${message}.${
         button ? ` Click ${button} to ${action}` : ''
@@ -39,6 +46,7 @@ const parseReply = (parent_author, author, permlink) => {
   if (trackReplies.indexOf(parent_author) !== -1) {
     sendNotification(
       parent_author,
+      'New Reply',
       `${author} has replied to you`,
       'View reply',
       `@${author}/${permlink}`,
@@ -52,7 +60,8 @@ const parseMentions = (users, author, permlink) => {
     if (trackMentions.indexOf(u) !== -1) {
       sendNotification(
         u,
-        `${author} has mentioned to you`,
+        'You have been mentioned',
+        `by ${author}`,
         'View post',
         `@${author}/${permlink}`,
       );
@@ -64,7 +73,7 @@ const parseFollow = (json, follower) => {
   if (json[0] !== 'follow' || json[1].what[0] !== 'blog') return;
   const following = json[1].following;
   if (trackFollows.indexOf(following) !== -1) {
-    sendNotification(following, `${follower} has followed you`);
+    sendNotification(following, 'New Follower', `${follower} now follows you`);
   }
 };
 
@@ -72,6 +81,7 @@ const parseCuration = (author, permlink, weight) => {
   if (trackCuration.indexOf(author) !== -1) {
     sendNotification(
       author,
+      'Congratulations!',
       `Your post ${permlink} has been ${
         weight < 6600 ? 'honoured' : 'curated'
       } by the TravelFeed curation team!`,
