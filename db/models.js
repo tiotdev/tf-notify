@@ -21,13 +21,21 @@ const pushSubscriptionsSchema = new Schema({
   pushSubscription: { type: String, unique: true },
 });
 
+const notificationsSchema = new Schema({
+  user: { type: String },
+  notification: { type: String },
+  date: { type: Date, default: Date.now() },
+});
+
 const Preferences = mongoose.model('preferences', preferencesSchema);
 const PushSubscriptions = mongoose.model(
   'pushSubscriptions',
   pushSubscriptionsSchema,
 );
+const Notifications = mongoose.model('notifications', notificationsSchema);
 
 module.exports = {
   Preferences,
   PushSubscriptions,
+  Notifications,
 };

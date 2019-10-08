@@ -1,5 +1,5 @@
 require('./connect');
-const { Preferences, PushSubscriptions } = require('.//models');
+const { Preferences, PushSubscriptions, Notifications } = require('./models');
 const { asyncForEach } = require('../helpers/utils');
 
 const getTrackedUsers = async () => {
@@ -45,7 +45,34 @@ const getUserToken = user => {
     });
 };
 
+const saveNotification = (user, notification) => {
+  return Notifications.find({ user })
+    .countDocuments()
+    .then(res => {
+      // Store up to 20 notifications per user
+      if (res > 20)
+        return Notifications.findOneAndUpdate(
+          { user },
+          { notification, date: new Date() },
+          { sort: { date: 1 } },
+        )
+          .then(res => console.log(res))
+          .catch(err => console.error(err));
+      return Notifications.create({
+        user,
+        notification,
+        date: new Date(),
+      })
+        .then(res => console.log(res))
+        .catch(err => console.error(err));
+    })
+    .catch(err => {
+      console.log(err);
+    });
+};
+
 module.exports = {
   getTrackedUsers,
   getUserToken,
+  saveNotification,
 };

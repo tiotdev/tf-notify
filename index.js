@@ -1,5 +1,5 @@
 const Redis = require('ioredis');
-const { getTrackedUsers, getUserToken } = require('./db/db');
+const { getTrackedUsers, getUserToken, saveNotification } = require('./db/db');
 const { sendWebPush } = require('./helpers/sendWebPush');
 
 // Redis requires separate instances for subscribing and retrieving messages
@@ -26,6 +26,7 @@ updateTrackedUsers();
 setInterval(updateTrackedUsers, 60000);
 
 const sendNotification = (user, title, message, button, action) => {
+  saveNotification(user, `${title}: ${message}`);
   getUserToken(user).then(token => {
     const payload = {
       body: message,
