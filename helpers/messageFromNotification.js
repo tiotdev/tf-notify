@@ -7,7 +7,6 @@ const notificationTypes = {
 };
 
 const messageFromNotification = (type, author, permlink) => {
-  console.log(type);
   let body = '';
   let title = '';
   let actions;

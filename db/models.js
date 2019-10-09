@@ -26,6 +26,7 @@ const notificationsSchema = new Schema({
   type: { type: String },
   author: { type: String },
   permlink: { type: String },
+  message: { type: String },
   date: { type: Date, default: Date.now() },
 });
 

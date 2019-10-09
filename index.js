@@ -47,7 +47,7 @@ const sendNotification = (user, type, author, permlink) => {
         const payload = messageFromNotification(type, author, permlink);
         sendWebPush(token, payload);
         console.log(
-          `Sending notification to ${user}' with payload ${JSON.stringify(
+          `Sending notification to ${user} with payload ${JSON.stringify(
             payload,
           )}`,
         );
