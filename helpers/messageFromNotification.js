@@ -30,7 +30,7 @@ const messageFromNotification = (type, author, permlink) => {
 
     case notificationTypes.HONOUR:
       title = 'Keep up the good work!';
-      body = `We have chosen your post for a small upvote.`;
+      body = `We have chosen your post for a small upvote!`;
       actions = [
         {
           action: 'open-post',
@@ -41,7 +41,7 @@ const messageFromNotification = (type, author, permlink) => {
 
     case notificationTypes.REPLY:
       title = `New reply`;
-      body = `${author} replied to your post.`;
+      body = `${author} replied to your post`;
       actions = [
         {
           action: 'open-post',
@@ -58,7 +58,7 @@ const messageFromNotification = (type, author, permlink) => {
 
     case notificationTypes.MENTION:
       title = 'New mention';
-      body = `${author} mentioned you.'}`;
+      body = `${author} mentioned you`;
       actions = [
         {
           action: 'open-post',
