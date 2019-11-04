@@ -27,10 +27,12 @@ let trackCuration = [];
 
 const updateTrackedUsers = () => {
   getTrackedUsers().then(res => {
-    trackFollows = res.trackFollows;
-    trackMentions = res.trackMentions;
-    trackReplies = res.trackReplies;
-    trackCuration = res.trackCuration;
+    if (res) {
+      trackFollows = res.trackFollows;
+      trackMentions = res.trackMentions;
+      trackReplies = res.trackReplies;
+      trackCuration = res.trackCuration;
+    }
   });
 };
 
